@@ -110,6 +110,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+    MX_USB_HOST_Process();
     HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
     HAL_Delay(2000);
     /* USER CODE BEGIN 3 */
