@@ -1,0 +1,7 @@
+pyproject.toml
+deskref/__init__.py
+deskref.egg-info/PKG-INFO
+deskref.egg-info/SOURCES.txt
+deskref.egg-info/dependency_links.txt
+deskref.egg-info/requires.txt
+deskref.egg-info/top_level.txt
