@@ -5,3 +5,4 @@ deskref.egg-info/SOURCES.txt
 deskref.egg-info/dependency_links.txt
 deskref.egg-info/requires.txt
 deskref.egg-info/top_level.txt
+tests/test_smoke.py
