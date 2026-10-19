@@ -19,7 +19,8 @@ def crc16_ccitt(data: bytes, crc: int = 0xFFFF) -> int:
 
 
 def encode_packet(seq: int, timestamp_us: int, samples) -> bytes:
-    samples = np.asarray(samples, dtype=np.int16)
+    samples = np.asarray(samples, dtype="<i2")
+
     body = HEADER.pack(VERSION, seq & 0xFFFF, timestamp_us & 0xFFFFFFFF, len(samples))
     body += samples.tobytes()
     return SYNC + body + CRC.pack(crc16_ccitt(body))
