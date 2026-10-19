@@ -17,18 +17,13 @@ cmake-build-*/
 *.list
 *.lst
 
+
 # CMake generated
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 compile_commands.json
 CMakeUserPresets.json
-
-# IAR leftovers (if you keep EWARM/)
-EWARM/**/Debug/
-EWARM/**/Release/
-EWARM/settings/
-*.dep
 
 # VS Code: keep shared config, ignore the rest
 .vscode/*
@@ -43,3 +38,4 @@ EWARM/settings/
 Thumbs.db
 *.swp
 *~
+.venv/
