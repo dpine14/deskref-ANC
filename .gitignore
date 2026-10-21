@@ -39,3 +39,4 @@ Thumbs.db
 *.swp
 *~
 .venv/
+.pytest_cache/

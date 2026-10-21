@@ -1,0 +1,10 @@
+pyproject.toml
+deskref/__init__.py
+deskref/com_protocol.py
+deskref_ANC.egg-info/PKG-INFO
+deskref_ANC.egg-info/SOURCES.txt
+deskref_ANC.egg-info/dependency_links.txt
+deskref_ANC.egg-info/requires.txt
+deskref_ANC.egg-info/top_level.txt
+tests/test_protocol.py
+tests/test_smoke.py

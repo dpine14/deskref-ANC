@@ -1,0 +1,9 @@
+numpy
+scipy
+pyserial
+
+[dev]
+pytest
+matplotlib
+soundfile
+sounddevice
