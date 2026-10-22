@@ -29,9 +29,17 @@ def run_metrics(proc,x: np.ndarray,block: int= 1024)-> np.ndarray:
     for i in range(0, len(x), block):
         x_out[i:i+block] = proc.process_audio(x[i:i+block])
     return x_out
-#
+
+def frame_rms(x, frame):
+    n = len(x) // frame
+    x = x[:n*frame].reshape(n, frame)
+    return np.sqrt(np.mean(x**2, axis=1))
+
 def main():
-    x,rate = load("data/raw/bumps_02.wav")
+    #x,rate = load("data/raw/silence_02.wav")
+    a = np.array([1, 1, 1, 1, 3, 3, 3, 3, 9], dtype=np.float32)
+    
+    print(frame_rms(a, 4))
     return("Fin")
 
 
