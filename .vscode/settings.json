@@ -1,4 +1,4 @@
 {
     "cmake.sourceDirectory": "C:/dev/deskref-ANC/firmware",
-    "python.analysis.languageServerMode": "default"
+    "python.analysis.languageServerMode": "default",
 }

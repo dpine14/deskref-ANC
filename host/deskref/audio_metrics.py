@@ -51,7 +51,7 @@ def floor_rms(silence: np.ndarray, rate: int,
 #Apply mask based on the RMS of the signal to determine which frames are considered "events" (i.e., above the noise floor)
 def event_mask(x: np.ndarray, rate: int, 
         floor, frame_ms: float=10.0,
-        margin_db: float=15.0, pad: int=2
+        margin_db: float=12.0, pad: int=2
         ) -> np.ndarray:
     #Need to find a better way to determine margin_db, as it is dependent on the recording environment and the noise floor of the recording
     frame = int(rate*frame_ms / 1000)
@@ -82,7 +82,7 @@ def mix_improvement(make_proc, speech, noise, block):
 
     return db(energy(speech)) - db(energy(noise)), sdr_db(speech, out)
 
-def _path(name: str) -> Path:
+def get_path(name: str) -> Path:
     return RAW_DIR / f"{name}.wav"
 
 def gate_warning(samples, rate, frame_ms: float=10.0):
@@ -90,51 +90,73 @@ def gate_warning(samples, rate, frame_ms: float=10.0):
     samples = frame_rms(samples, frame)
     return np.count_nonzero(samples == 0) / len(samples)
 
-def helper(label, samples, rate, floor, block, margin_db):
+def noise_report(label, samples, rate, floor, block, margin_db):
     
     p = Processor(rate)
     out = run_metrics(p, samples, block)
-    mask = event_mask(out, rate, floor, margin_db=margin_db)
+    mask = event_mask(samples, rate, floor, margin_db=margin_db)
     nr = noise_reduction_db(samples, out, mask)
     print(f"{label:8s} noise reduction {nr:6.1f} dB  ({mask.mean() * 100:.1f}% flagged)")
 
 def main():
-
- 
+    
+    #Define aguments to be taken and parsed
     p = argparse.ArgumentParser()
     p.add_argument("--silence", default="silence_03")
     p.add_argument("--speaking", default="talking_01")
     p.add_argument("--bumps", default="bumps_01")
-    p.add_argument("--typing", default="typing_01")
-    p.add_argument("--margin", type=float, default=15.0)
+    p.add_argument("--typing", default="typing_02")
+    p.add_argument("--margin", type=float, default=12.0)
     p.add_argument("--block", type=int, default=1024)
     args = p.parse_args()
 
-    files = {
+    #Dict to easily choose which file
+    files, samples, rates = {
         "silence": args.silence,
         "typing": args.typing,
         "speaking": args.speaking,
         "bumps": args.bumps,
-    }
-    
-    samples, rates = {}, {}
-    for label, name in files.items():
-        if not _path(name).exists():
-            raise SystemExit(f"The file {_path(name)} in {_path(name).parent} does not exist") 
+    },{},{}
 
-        x, rate = load(_path(name))
-        if len(x) == 0: raise SystemExit(f"{_path(name)} is an empty file")
-        if np.abs(x).max() > 0.99: print(f"WARNING: {_path(name).name} has clipping")
+    
+    #Run through and load audio files
+    for label, name in files.items():
+        #Check that file actually exists
+        if not get_path(name).exists():
+            raise SystemExit(f"The file {get_path(name)} in {get_path(name).parent} does not exist") 
+        x, rate = load(get_path(name))
+
+        #Check that recording isnt empty and then make sure that the file doesn't have clipping
+        if len(x) == 0: raise SystemExit(f"{get_path(name)} is an empty file")
+        if np.abs(x).max() > 0.99: 
+            print(f"WARNING: {get_path(name).name} has clipping")
         samples[label] = x
         rates[label] = rate
         frac = gate_warning(x, rate)
-        if  frac >= 0.02: print(f"WARNING: {_path(name).name} has {frac*100:.1f}% zero frames, possibly gated")
-    if len(set(rates.values())) != 1: raise SystemExit(f"Sample rates are not identical: {rates}")
+
+        #Check if file has gating
+        if  frac >= 0.02: 
+            print(f"WARNING: {get_path(name).name} has {frac*100:.1f}% zero frames, possibly gated")
+
+    #Now that weve loaded files, we check to make sure they have identical rates. Otherwise comparison math wont work correctly
+    if len(set(rates.values())) != 1: 
+        raise SystemExit(f"Sample rates are not identical: {rates}")
 
     rate = rates["silence"]
     floor = floor_rms(samples["silence"], rate)
-    helper("typing", samples["typing"], rate, floor, args.block, args.margin)
+    sp, r = load(get_path(args.speaking))
+    ps = run_metrics(Processor(rate), sp, args.block)
+    
+    for label in ["typing", "bumps"]: 
+        noise_report(label, samples[label], rate, floor, args.block, args.margin)
 
+    x, rate = load(get_path("typing_03"))
+    r = frame_rms(x, int(rate * 10 / 1000))
+    d = lambda v: 20 * np.log10(max(v, 1e-9))    
+
+    before, after = mix_improvement(lambda: Processor(rate), samples["speaking"], samples["typing"], args.block)
+    print(f"{args.speaking}     Lvl Change: {lvl_change_db(sp, ps)}     SDR: {sdr_db(sp, ps)}") 
+    print(d(floor), d(np.median(r)), d(np.percentile(r, 99)), d(r.max()))
 
 
     
